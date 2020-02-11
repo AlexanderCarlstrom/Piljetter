@@ -1,6 +1,6 @@
--- MySQL dump 10.13  Distrib 8.0.17, for macos10.14 (x86_64)
+-- MySQL dump 10.13  Distrib 8.0.19, for Win64 (x86_64)
 --
--- Host: localhost    Database: piljetter
+-- Host: 127.0.0.1    Database: piljetter
 -- ------------------------------------------------------
 -- Server version	8.0.19
 
@@ -24,8 +24,8 @@ DROP TABLE IF EXISTS `admin`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `admin` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `username` varchar(50) DEFAULT NULL,
-  `password` varchar(255) DEFAULT NULL,
+  `username` varchar(50) NOT NULL,
+  `password` varchar(50) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -48,8 +48,9 @@ DROP TABLE IF EXISTS `artist`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `artist` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(30) DEFAULT NULL,
-  `popularity` int DEFAULT NULL,
+  `name` varchar(50) NOT NULL,
+  `popularity` int DEFAULT '0',
+  `country` varchar(30) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -64,6 +65,33 @@ LOCK TABLES `artist` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `customer`
+--
+
+DROP TABLE IF EXISTS `customer`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `customer` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `first_name` varchar(30) NOT NULL,
+  `last_name` varchar(30) NOT NULL,
+  `email` varchar(50) NOT NULL,
+  `password` varchar(50) NOT NULL,
+  `pesetas` int DEFAULT '0',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `customer`
+--
+
+LOCK TABLES `customer` WRITE;
+/*!40000 ALTER TABLE `customer` DISABLE KEYS */;
+/*!40000 ALTER TABLE `customer` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `event`
 --
 
@@ -72,14 +100,15 @@ DROP TABLE IF EXISTS `event`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `event` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `stage_id` int DEFAULT NULL,
-  `artist_id` int DEFAULT NULL,
-  `tickets_left` int DEFAULT NULL,
-  `ticket_price` int DEFAULT NULL,
-  `start_time` datetime DEFAULT NULL,
-  `end_time` datetime DEFAULT NULL,
-  `created_by` int DEFAULT NULL,
-  `cost` int DEFAULT NULL,
+  `stage_id` int NOT NULL,
+  `artist_id` int NOT NULL,
+  `tickets` int NOT NULL,
+  `tickets_sold` int NOT NULL,
+  `ticket_price` int NOT NULL,
+  `start_time` datetime NOT NULL,
+  `end_time` datetime NOT NULL,
+  `created_by` int NOT NULL,
+  `cost` int NOT NULL,
   PRIMARY KEY (`id`),
   KEY `stage_id` (`stage_id`),
   KEY `artist_id` (`artist_id`),
@@ -108,10 +137,15 @@ DROP TABLE IF EXISTS `order`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `order` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `event_id` int DEFAULT NULL,
+  `event_id` int NOT NULL,
+  `customer_id` int NOT NULL,
+  `tickets` int NOT NULL,
+  `completed` bit(1) DEFAULT b'0',
   PRIMARY KEY (`id`),
   KEY `event_id` (`event_id`),
-  CONSTRAINT `order_ibfk_1` FOREIGN KEY (`event_id`) REFERENCES `event` (`id`)
+  KEY `customer_id` (`customer_id`),
+  CONSTRAINT `order_ibfk_1` FOREIGN KEY (`event_id`) REFERENCES `event` (`id`),
+  CONSTRAINT `order_ibfk_2` FOREIGN KEY (`customer_id`) REFERENCES `customer` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -133,10 +167,10 @@ DROP TABLE IF EXISTS `stage`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `stage` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `address` varchar(100) DEFAULT NULL,
-  `city` varchar(30) DEFAULT NULL,
-  `country` varchar(30) DEFAULT NULL,
-  `reputation` int DEFAULT NULL,
+  `address` varchar(50) NOT NULL,
+  `city` varchar(30) NOT NULL,
+  `country` varchar(30) NOT NULL,
+  `reputation` int DEFAULT '0',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -159,13 +193,13 @@ DROP TABLE IF EXISTS `ticket`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `ticket` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `customer_id` int DEFAULT NULL,
-  `event_id` int DEFAULT NULL,
-  `used` bit(1) DEFAULT NULL,
+  `customer_id` int NOT NULL,
+  `event_id` int NOT NULL,
+  `used` bit(1) DEFAULT b'0',
   PRIMARY KEY (`id`),
   KEY `customer_id` (`customer_id`),
   KEY `event_id` (`event_id`),
-  CONSTRAINT `ticket_ibfk_1` FOREIGN KEY (`customer_id`) REFERENCES `user` (`id`),
+  CONSTRAINT `ticket_ibfk_1` FOREIGN KEY (`customer_id`) REFERENCES `customer` (`id`),
   CONSTRAINT `ticket_ibfk_2` FOREIGN KEY (`event_id`) REFERENCES `event` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -180,33 +214,6 @@ LOCK TABLES `ticket` WRITE;
 UNLOCK TABLES;
 
 --
--- Table structure for table `user`
---
-
-DROP TABLE IF EXISTS `user`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `user` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `first_name` varchar(30) DEFAULT NULL,
-  `last_name` varchar(30) DEFAULT NULL,
-  `email` varchar(50) DEFAULT NULL,
-  `password` varchar(255) DEFAULT NULL,
-  `pesetas` int DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `user`
---
-
-LOCK TABLES `user` WRITE;
-/*!40000 ALTER TABLE `user` DISABLE KEYS */;
-/*!40000 ALTER TABLE `user` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
 -- Table structure for table `voucher`
 --
 
@@ -215,12 +222,13 @@ DROP TABLE IF EXISTS `voucher`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `voucher` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `user_id` int DEFAULT NULL,
-  `used` bit(1) DEFAULT NULL,
-  `code` varchar(255) DEFAULT NULL,
+  `customer_id` int NOT NULL,
+  `used` bit(1) NOT NULL,
+  `code` varchar(50) NOT NULL,
+  `expire_date` datetime NOT NULL,
   PRIMARY KEY (`id`),
-  KEY `user_id` (`user_id`),
-  CONSTRAINT `voucher_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`)
+  KEY `customer_id` (`customer_id`),
+  CONSTRAINT `voucher_ibfk_1` FOREIGN KEY (`customer_id`) REFERENCES `customer` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -250,4 +258,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2020-02-07 11:10:59
+-- Dump completed on 2020-02-11  8:41:36
