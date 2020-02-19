@@ -1,10 +1,10 @@
-const express = require('express');
-const router = express.Router();
-const jwt = require('jsonwebtoken');
 const expressJwt = require('express-jwt');
-const dotenv = require('dotenv');
 const con = require('../connection');
+const jwt = require('jsonwebtoken');
+const express = require('express');
+const dotenv = require('dotenv');
 const mysql = require('mysql2');
+const router = express.Router();
 dotenv.config();
 
 // admin login
@@ -18,17 +18,17 @@ router.post('/register', expressJwt({ secret: process.env.JWT_SECRET }), (req, r
   register(req, res);
 });
 
-router.post('/stage', expressJwt({ secret: process.env.JWT_SECRET }), (req, res) => {
+router.post('/create_stage', expressJwt({ secret: process.env.JWT_SECRET }), (req, res) => {
   if (req.user.user.role !== 'admin') return res.send('Unathorized');
   createStage(req, res);
 });
 
-router.post('/artist', expressJwt({ secret: process.env.JWT_SECRET }), (req, res) => {
+router.post('/create_artist', expressJwt({ secret: process.env.JWT_SECRET }), (req, res) => {
   if (req.user.user.role !== 'admin') return res.send('Unathorized');
   createArtist(req, res);
 });
 
-router.post('/event', expressJwt({ secret: process.env.JWT_SECRET }), (req, res) => {
+router.post('/create_event', expressJwt({ secret: process.env.JWT_SECRET }), (req, res) => {
   if (req.user.user.role !== 'admin') return res.send('Unathorized');
   createEvent(req, res, req.user.user.id);
 });

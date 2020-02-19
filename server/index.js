@@ -1,9 +1,9 @@
 const customerRoutes = require('./routes/customer.routes');
 const adminRoutes = require('./routes/admin.routes');
 const bodyParser = require('body-parser');
+const con = require('./connection');
 const express = require('express');
 const app = express();
-const con = require('./connection');
 
 const port = 3000;
 

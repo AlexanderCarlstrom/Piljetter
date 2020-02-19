@@ -1,10 +1,10 @@
-const express = require('express');
-const router = express.Router();
 const validator = require('email-validator');
-const jwt = require('jsonwebtoken');
 const expressJwt = require('express-jwt');
-const dotenv = require('dotenv');
 const con = require('../connection');
+const jwt = require('jsonwebtoken');
+const express = require('express');
+const dotenv = require('dotenv');
+const router = express.Router();
 dotenv.config();
 
 // customer login
@@ -120,10 +120,6 @@ async function buyPesetas(req, res) {
   );
 }
 
-// TODO
-// 1. get event price
-// 2. check if customer has enough pesetas
-// 3. create order
 async function buyTicket(req, res) {
   const event_id = req.body.event;
   const customer_id = req.user.user.id;
