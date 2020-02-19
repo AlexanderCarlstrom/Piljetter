@@ -1,6 +1,6 @@
--- MySQL dump 10.13  Distrib 8.0.17, for macos10.14 (x86_64)
+-- MySQL dump 10.13  Distrib 8.0.19, for Win64 (x86_64)
 --
--- Host: localhost    Database: piljetter
+-- Host: 127.0.0.1    Database: piljetter
 -- ------------------------------------------------------
 -- Server version	8.0.19
 
@@ -27,7 +27,7 @@ CREATE TABLE `admin` (
   `username` varchar(50) NOT NULL,
   `password` varchar(50) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -36,7 +36,7 @@ CREATE TABLE `admin` (
 
 LOCK TABLES `admin` WRITE;
 /*!40000 ALTER TABLE `admin` DISABLE KEYS */;
-INSERT INTO `admin` VALUES (1,'alexander','alexander');
+INSERT INTO `admin` VALUES (1,'alexander','alexander'),(2,'shakil','shakil');
 /*!40000 ALTER TABLE `admin` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -50,10 +50,10 @@ DROP TABLE IF EXISTS `artist`;
 CREATE TABLE `artist` (
   `id` int NOT NULL AUTO_INCREMENT,
   `name` varchar(50) NOT NULL,
-  `popularity` int DEFAULT '0',
+  `popularity` int NOT NULL,
   `country` varchar(30) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -62,7 +62,7 @@ CREATE TABLE `artist` (
 
 LOCK TABLES `artist` WRITE;
 /*!40000 ALTER TABLE `artist` DISABLE KEYS */;
-INSERT INTO `artist` VALUES (1,'Zara Larsson',0,'Sweden'),(2,'Justin Bieber',0,'USA');
+INSERT INTO `artist` VALUES (1,'Zara Larsson',6,'Sweden'),(2,'Justin Bieber',10,'USA'),(4,'Adele',10,'UK'),(5,'Ed Sheeran',10,'UK');
 /*!40000 ALTER TABLE `artist` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -81,7 +81,7 @@ CREATE TABLE `customer` (
   `password` varchar(50) NOT NULL,
   `pesetas` int DEFAULT '0',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=27 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -90,7 +90,7 @@ CREATE TABLE `customer` (
 
 LOCK TABLES `customer` WRITE;
 /*!40000 ALTER TABLE `customer` DISABLE KEYS */;
-INSERT INTO `customer` VALUES (1,'Alexander','Carlström','caarlstrom.alexander@gmail.com','1234567',0);
+INSERT INTO `customer` VALUES (1,'Alexander','Carlström','caarlstrom.alexander@gmail.com','1234567',70),(24,'Ananya','Mackay','ananya.mackay@gmail.com','12345678',0),(25,'Alma','Bass','alma.bass@gmail.com','12345678',0),(26,'Shakil','Hough','shakil.hough@gmail.com','123456789',0);
 /*!40000 ALTER TABLE `customer` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -123,7 +123,7 @@ CREATE TABLE `event` (
   CONSTRAINT `event_ibfk_2` FOREIGN KEY (`artist_id`) REFERENCES `artist` (`id`),
   CONSTRAINT `event_ibfk_3` FOREIGN KEY (`created_by`) REFERENCES `admin` (`id`),
   CONSTRAINT `CC_DateInFuture` CHECK ((`date` > `created_date`))
-) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -132,7 +132,7 @@ CREATE TABLE `event` (
 
 LOCK TABLES `event` WRITE;
 /*!40000 ALTER TABLE `event` DISABLE KEYS */;
-INSERT INTO `event` VALUES (13,1,2,10000,0,500,1,1000000,'2020-02-22','22:00:00','2020-02-12');
+INSERT INTO `event` VALUES (13,1,2,10000,0,500,1,1000000,'2020-02-22','22:00:00','2020-02-12'),(14,1,1,40000,0,1000,1,3600000,'2020-03-20','18:00:00','2020-02-18'),(15,2,2,15000,0,500,1,4000000,'2020-03-25','18:00:00','2020-02-18');
 /*!40000 ALTER TABLE `event` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -149,7 +149,7 @@ CREATE TABLE `order` (
   `customer_id` int NOT NULL,
   `tickets` int NOT NULL,
   `completed` bit(1) DEFAULT b'0',
-  `order_date` datetime NOT NULL,
+  `order_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `event_id` (`event_id`),
   KEY `customer_id` (`customer_id`),
@@ -178,10 +178,10 @@ CREATE TABLE `stage` (
   `id` int NOT NULL AUTO_INCREMENT,
   `city` varchar(30) NOT NULL,
   `country` varchar(30) NOT NULL,
-  `reputation` int DEFAULT '0',
+  `reputation` int NOT NULL,
   `name` varchar(50) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -190,7 +190,7 @@ CREATE TABLE `stage` (
 
 LOCK TABLES `stage` WRITE;
 /*!40000 ALTER TABLE `stage` DISABLE KEYS */;
-INSERT INTO `stage` VALUES (1,'Gothenburg','Sweden',0,'Gamla Ullevi');
+INSERT INTO `stage` VALUES (1,'Gothenburg','Sweden',6,'Gamla Ullevi'),(2,'Gothenburg','Sweden',4,'Nya Ullevi'),(3,'Stockholm','Sweden',7,'Globen');
 /*!40000 ALTER TABLE `stage` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -206,6 +206,7 @@ CREATE TABLE `ticket` (
   `customer_id` int NOT NULL,
   `event_id` int NOT NULL,
   `used` bit(1) DEFAULT b'0',
+  `price` int NOT NULL,
   PRIMARY KEY (`id`),
   KEY `customer_id` (`customer_id`),
   KEY `event_id` (`event_id`),
@@ -295,4 +296,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2020-02-16 14:36:54
+-- Dump completed on 2020-02-19  7:38:52
