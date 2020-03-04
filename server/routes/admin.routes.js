@@ -1,5 +1,6 @@
 const expressJwt = require('express-jwt');
 const con = require('../connection');
+const promiseCon = con.promise();
 const jwt = require('jsonwebtoken');
 const express = require('express');
 const dotenv = require('dotenv');
@@ -18,19 +19,34 @@ router.post('/register', expressJwt({ secret: process.env.JWT_SECRET }), (req, r
   register(req, res);
 });
 
+// create stage
 router.post('/create_stage', expressJwt({ secret: process.env.JWT_SECRET }), (req, res) => {
   if (req.user.user.role !== 'admin') return res.send('Unathorized');
   createStage(req, res);
 });
 
+// create artist
 router.post('/create_artist', expressJwt({ secret: process.env.JWT_SECRET }), (req, res) => {
   if (req.user.user.role !== 'admin') return res.send('Unathorized');
   createArtist(req, res);
 });
 
+// create event
 router.post('/create_event', expressJwt({ secret: process.env.JWT_SECRET }), (req, res) => {
   if (req.user.user.role !== 'admin') return res.send('Unathorized');
-  createEvent(req, res, req.user.user.id);
+  createEvent(req, res);
+});
+
+// cancel event
+router.post('/cancel_event', expressJwt({ secret: process.env.JWT_SECRET }), (req, res) => {
+  if (req.user.user.role !== 'admin') return res.send('Unathorized');
+  cancelEvent(req, res);
+});
+
+// get events
+router.post('/events', expressJwt({ secret: process.env.JWT_SECRET }), (req, res) => {
+  if (req.user.user.role !== 'admin') return res.send('Unathorized');
+  getEvents(req, res);
 });
 
 function login(req, res) {
@@ -65,7 +81,7 @@ async function register(req, res) {
 
   // check if email already exists
   const checkSql = 'SELECT `username` FROM `admin` WHERE `username` = ?';
-  const [row] = await con.promise().query(checkSql, [username]);
+  const [row] = await promiseCon.query(checkSql, [username]);
   if (row.length > 0) {
     return res.send('admin user already exist');
   }
@@ -87,7 +103,7 @@ async function createStage(req, res) {
 
   // check if stage already exist
   const checkSql = 'SELECT `name` FROM `stage` WHERE `name` = ? AND `city` = ? AND `country` = ?';
-  await con.promise().query(checkSql, [name, city, country], (err, result) => {
+  await promiseCon.query(checkSql, [name, city, country], (err, result) => {
     if (err) return res.send(err);
     if (result.length > 0) {
       return res.send('Stage already exist');
@@ -110,7 +126,7 @@ async function createArtist(req, res) {
 
   // check if stage already exist
   const checkSql = 'SELECT `name` FROM `artist` WHERE `name` = ?';
-  await con.promise().query(checkSql, [name], (err, result) => {
+  await promiseCon.query(checkSql, [name], (err, result) => {
     if (err) return next(err);
     if (result.length > 0) {
       return res.send('Artist already exist');
@@ -123,11 +139,11 @@ async function createArtist(req, res) {
   });
 }
 
-async function createEvent(req, res, admin) {
+async function createEvent(req, res) {
   // storing inputs - variables will be escaped in query
+  const admin = req.user.user.id;
   const artist = req.body.artist;
   const stage = req.body.stage;
-  const tickets = req.body.tickets;
   const ticket_price = req.body.ticket_price;
   const date = req.body.date;
   const time = req.body.time;
@@ -161,11 +177,82 @@ async function createEvent(req, res, admin) {
     ]);
   if (event_row.length > 0) return res.send('event already exist');
   const sql =
-    'INSERT INTO `event` (`stage_id`, `artist_id`, `tickets`, `ticket_price`, `created_by`, `cost`, `date`, `time`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
-  con.query(sql, [stage, artist, tickets, ticket_price, admin, cost, date, time], (err, result) => {
+    'INSERT INTO `event` (`stage_id`, `artist_id`, `ticket_price`, `created_by`, `cost`, `date`, `time`) VALUES (?, ?, ?, ?, ?, ?, ?)';
+  con.query(sql, [stage, artist, ticket_price, admin, cost, date, time], (err, result) => {
     if (err) return res.send(err);
     res.send('Done');
   });
+}
+
+async function cancelEvent(req, res) {
+  const event_id = req.body.event;
+  const voucher = req.body.voucher;
+
+  await promiseCon.beginTransaction();
+
+  // get tickets for event
+  const ticket_result = await promiseCon.query(
+    'SELECT `id`, `customer_id`, `price` FROM `ticket` WHERE `event_id` = ? FOR UPDATE',
+    [event_id]
+  );
+  const tickets = ticket_result[0];
+
+  // loop through tickets - update customer pesetas and delete ticket
+  tickets.forEach(ticket => {
+    // update customer pesetas
+    con.query(
+      'UPDATE `customer` SET `pesetas` = `pesetas` + ? WHERE `id` = ?',
+      [ticket.price, ticket.customer_id],
+      err => {
+        if (err) {
+          promiseCon.rollback();
+        }
+
+        if (voucher === 'true') {
+          con.query(
+            'INSERT INTO `voucher` (`customer_id`) VALUES (?)',
+            [ticket.customer_id],
+            err => {
+              if (err) {
+                promiseCon.rollback();
+              }
+            }
+          );
+        }
+        // delete ticket
+        con.query('DELETE FROM `ticket` WHERE `id` = ?', [ticket.id], err => {
+          if (err) {
+            promiseCon.rollback();
+          }
+        });
+      }
+    );
+  });
+
+  await promiseCon.query('DELETE FROM `event` WHERE `id` = ?', [event_id], err => {
+    if (err) {
+      promiseCon.rollback();
+    }
+  });
+
+  await promiseCon.commit();
+  res.status(200).send('OK');
+}
+
+function getEvents(req, res) {
+  const user_id = req.user.user.id;
+  con.query(
+    `SELECT e.*, a.name as artist_name, s.city, s.country, s.name as stage_name
+    FROM ((event AS e
+      INNER JOIN artist AS a ON e.artist_id = a.id)
+      INNER JOIN stage AS s ON e.stage_id = s.id)
+      WHERE e.date >= NOW()`,
+    [user_id],
+    (err, result) => {
+      if (err) return res.send(err);
+      res.send(result);
+    }
+  );
 }
 
 module.exports = router;

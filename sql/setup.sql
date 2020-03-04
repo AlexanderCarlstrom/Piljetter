@@ -1,6 +1,8 @@
--- MySQL dump 10.13  Distrib 8.0.17, for macos10.14 (x86_64)
+CREATE DATABASE  IF NOT EXISTS `piljetter` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
+USE `piljetter`;
+-- MySQL dump 10.13  Distrib 8.0.19, for Win64 (x86_64)
 --
--- Host: localhost    Database: piljetter
+-- Host: 127.0.0.1    Database: piljetter
 -- ------------------------------------------------------
 -- Server version	8.0.19
 
@@ -26,7 +28,9 @@ CREATE TABLE `admin` (
   `id` int NOT NULL AUTO_INCREMENT,
   `username` varchar(50) NOT NULL,
   `password` varchar(50) NOT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UC_Username` (`username`),
+  KEY `idx_Admin_Username_Password` (`username`,`password`)
 ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -52,7 +56,8 @@ CREATE TABLE `artist` (
   `name` varchar(50) NOT NULL,
   `popularity` int NOT NULL,
   `country` varchar(30) NOT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UC_Name` (`name`)
 ) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -80,8 +85,10 @@ CREATE TABLE `customer` (
   `email` varchar(50) NOT NULL,
   `password` varchar(50) NOT NULL,
   `pesetas` int DEFAULT '0',
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=27 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UC_Email` (`email`),
+  KEY `idx_Customer_Email_Password` (`email`,`password`)
+) ENGINE=InnoDB AUTO_INCREMENT=28 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -90,7 +97,7 @@ CREATE TABLE `customer` (
 
 LOCK TABLES `customer` WRITE;
 /*!40000 ALTER TABLE `customer` DISABLE KEYS */;
-INSERT INTO `customer` VALUES (1,'Alexander','Carlström','caarlstrom.alexander@gmail.com','1234567',70),(24,'Ananya','Mackay','ananya.mackay@gmail.com','12345678',0),(25,'Alma','Bass','alma.bass@gmail.com','12345678',0),(26,'Shakil','Hough','shakil.hough@gmail.com','123456789',0);
+INSERT INTO `customer` VALUES (1,'Alexander','Carlström','caarlstrom.alexander@gmail.com','1234567',18610),(24,'Ananya','Mackay','ananya.mackay@gmail.com','12345678',0),(25,'Alma','Bass','alma.bass@gmail.com','12345678',0),(26,'Shakil','Hough','shakil.hough@gmail.com','123456789',0),(27,'Kit','Fraser','kit.fraser@gmail.com','123456789',0);
 /*!40000 ALTER TABLE `customer` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -112,6 +119,7 @@ CREATE TABLE `event` (
   `date` date NOT NULL,
   `time` time NOT NULL,
   `created_date` date DEFAULT (curdate()),
+  `income` int DEFAULT '0',
   PRIMARY KEY (`id`),
   UNIQUE KEY `UC_ArtistDate` (`date`,`artist_id`),
   UNIQUE KEY `UC_EventStage` (`date`,`stage_id`),
@@ -122,7 +130,7 @@ CREATE TABLE `event` (
   CONSTRAINT `event_ibfk_2` FOREIGN KEY (`artist_id`) REFERENCES `artist` (`id`),
   CONSTRAINT `event_ibfk_3` FOREIGN KEY (`created_by`) REFERENCES `admin` (`id`),
   CONSTRAINT `CC_DateInFuture` CHECK ((`date` > `created_date`))
-) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -131,40 +139,8 @@ CREATE TABLE `event` (
 
 LOCK TABLES `event` WRITE;
 /*!40000 ALTER TABLE `event` DISABLE KEYS */;
-INSERT INTO `event` VALUES (13,1,2,0,500,1,1000000,'2020-02-22','22:00:00','2020-02-12'),(14,1,1,0,1000,1,3600000,'2020-03-20','18:00:00','2020-02-18'),(15,2,2,0,500,1,4000000,'2020-03-25','18:00:00','2020-02-18');
+INSERT INTO `event` VALUES (14,1,1,5,1000,1,3600000,'2020-03-20','18:00:00','2020-02-18',5000),(15,2,2,2,500,1,4000000,'2020-03-25','18:00:00','2020-02-18',1000),(16,2,2,0,500,1,4000000,'2020-03-29','18:00:00','2020-02-21',0);
 /*!40000 ALTER TABLE `event` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `order`
---
-
-DROP TABLE IF EXISTS `order`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `order` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `event_id` int NOT NULL,
-  `customer_id` int NOT NULL,
-  `tickets` int NOT NULL,
-  `completed` bit(1) DEFAULT b'0',
-  `order_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `event_id` (`event_id`),
-  KEY `customer_id` (`customer_id`),
-  CONSTRAINT `order_ibfk_1` FOREIGN KEY (`event_id`) REFERENCES `event` (`id`),
-  CONSTRAINT `order_ibfk_2` FOREIGN KEY (`customer_id`) REFERENCES `customer` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `order`
---
-
-LOCK TABLES `order` WRITE;
-/*!40000 ALTER TABLE `order` DISABLE KEYS */;
-INSERT INTO `order` VALUES (1,13,1,1,_binary '\0','2020-02-19 09:44:45');
-/*!40000 ALTER TABLE `order` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -181,7 +157,8 @@ CREATE TABLE `stage` (
   `reputation` int NOT NULL,
   `name` varchar(50) NOT NULL,
   `capacity` int NOT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UC_Name` (`name`)
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -213,7 +190,7 @@ CREATE TABLE `ticket` (
   KEY `event_id` (`event_id`),
   CONSTRAINT `ticket_ibfk_1` FOREIGN KEY (`customer_id`) REFERENCES `customer` (`id`),
   CONSTRAINT `ticket_ibfk_2` FOREIGN KEY (`event_id`) REFERENCES `event` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -222,6 +199,7 @@ CREATE TABLE `ticket` (
 
 LOCK TABLES `ticket` WRITE;
 /*!40000 ALTER TABLE `ticket` DISABLE KEYS */;
+INSERT INTO `ticket` VALUES (7,1,14,_binary '\0',1000),(8,1,14,_binary '\0',1000),(9,1,14,_binary '\0',1000),(10,1,14,_binary '\0',1000),(11,1,14,_binary '\0',1000),(12,1,15,_binary '\0',500),(13,1,15,_binary '\0',500);
 /*!40000 ALTER TABLE `ticket` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -236,8 +214,6 @@ CREATE TABLE `voucher` (
   `id` int NOT NULL AUTO_INCREMENT,
   `customer_id` int NOT NULL,
   `used` bit(1) NOT NULL,
-  `code` varchar(50) NOT NULL,
-  `expire_date` datetime NOT NULL,
   PRIMARY KEY (`id`),
   KEY `customer_id` (`customer_id`),
   CONSTRAINT `voucher_ibfk_1` FOREIGN KEY (`customer_id`) REFERENCES `customer` (`id`)
@@ -270,4 +246,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2020-02-19 17:01:03
+-- Dump completed on 2020-02-21 23:12:55

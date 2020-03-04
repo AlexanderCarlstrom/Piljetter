@@ -1,0 +1,17 @@
+customer
+  * (email, password)
+
+admin
+  * (username, password)
+
+tickets
+  * customer_id - already exist
+
+voucher
+  * customer_id - already exist
+
+stage
+  * (name, city, country)
+
+artist
+  * name
